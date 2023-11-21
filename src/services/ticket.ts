@@ -1,66 +1,58 @@
-import firebase from 'firebase/compat/app';
-import { arrayUnion, doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db } from '../../firebase';
-import { InputTicketType, SessionType, TicketType } from '../types';
+
+import { SupabaseClient } from '@supabase/supabase-js';
+import { TicketInsertDto, TicketUpdateDto } from '../types';
 
 
 // Create a new ticket for a given session
-async function createTicket(sessionId: string, ticket: InputTicketType): Promise<void> {
-  const sessionRef = doc(db, 'sessions', sessionId)
-  await updateDoc(sessionRef, {
-    tickets: arrayUnion({
+async function createTicket(client: SupabaseClient, ticket: TicketInsertDto): Promise<void> {
+  const result = await client.from('tickets').insert(ticket);
+
+  if (result.error) {
+    throw new Error(result.error.message);
+  }
+
+  return;
+}
+
+export const createTickets = async (client: SupabaseClient, tickets: TicketInsertDto[]) => {
+  const initializedTickets = tickets.map(ticket => {
+    return {
       ...ticket,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    }),
+      status: 'CREATED',
+    }
   });
+
+  const result = await client.from('tickets').insert(initializedTickets);
+
+  if (result.error) {
+    throw new Error(result.error.message);
+  }
+
+  return;
 }
 
 
 // Update a ticket for a given session
-async function updateTicket(sessionId: string, ticketId: string, updatedTicket: Partial<TicketType>): Promise<void> {
-  const sessionRef = doc(db, 'sessions', sessionId)
-  const sessionDoc = await getDoc(sessionRef);
+async function updateTicket(client: SupabaseClient, sessionId: string, userId: string, updatedTicket: TicketUpdateDto): Promise<void> {
+  const result = await client.from('tickets').update(updatedTicket).match({ session_id: sessionId, user_id: userId });
 
-  if (!sessionDoc.exists()) {
-    throw new Error('Session not found');
+  if (result.error) {
+    throw new Error(result.error.message);
   }
 
-  const sessionData = sessionDoc.data() as SessionType;
-
-  const updatedTickets = sessionData.tickets.map((ticket) => {
-    if (ticket.id === ticketId) {
-      return {
-        ...updatedTicket,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      };
-    }
-
-    return ticket;
-  });
-
-  return await updateDoc(sessionRef, {
-    tickets: updatedTickets,
-  });
+  return;
 }
 
 // Delete a ticket for a given session
-async function deleteTicket(sessionId: string, ticketId: string): Promise<void> {
-  const sessionRef = doc(db, 'sessions', sessionId)
-  const sessionDoc = await getDoc(sessionRef);
+async function deleteTicket(client: SupabaseClient, sessionId: string, ticketId: string): Promise<void> {
+  const result = await client.from('tickets').delete().match({ session_id: sessionId, id: ticketId });
 
-  if (!sessionDoc.exists()) {
-    throw new Error('Session not found');
+  if (result.error) {
+    throw new Error(result.error.message);
   }
 
-  const sessionData = sessionDoc.data() as SessionType;
-
-  const updatedTickets = sessionData.tickets.filter((ticket) => ticket.id !== ticketId);
-
-  return await updateDoc(sessionRef, {
-    tickets: updatedTickets,
-  });
+  return;
 }
 
-export { createTicket, deleteTicket, updateTicket, voteOnTicket };
+export { createTicket, deleteTicket, updateTicket };
 

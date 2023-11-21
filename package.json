@@ -1,7 +1,7 @@
 {
   "name": "poyntr-web",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,9 +11,10 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^1.9.7",
+    "@supabase/supabase-js": "^2.38.4",
     "@tailwindcss/typography": "^0.5.10",
     "@tanstack/react-query": "^5.4.3",
-    "firebase": "^10.5.2",
+    "@uidotdev/usehooks": "^2.4.1",
     "install": "^0.13.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

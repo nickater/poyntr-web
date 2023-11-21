@@ -1,45 +1,33 @@
-export type SessionType = {
-  id: string;
-  name?: string;
-  description?: string;
-  creator?: User;
-  createdAt: Date;
-  updatedAt: Date;
-  status: 'CREATED' | 'STARTED' | 'FINISHED';
+import { User } from '@supabase/supabase-js';
+import { Database } from './types/supabase';
 
-  tickets: TicketType[];
-  users: User[];
-  voteOptions: string[];
-};
+export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row']
+export type Enums<T extends keyof Database['public']['Enums']> = Database['public']['Enums'][T]
 
-export type InputSessionType = Omit<SessionType, 'id' | 'createdAt' | 'updatedAt'>;
+type Row<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
+type InsertDto<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Insert'];
+type UpdateDto<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Update'];
 
-export type TicketType = {
-  id: string;
-  name?: string;
-  description?: string;
-  url: string;
-  createdAt: Date;
-  updatedAt: Date;
-  votes: VoteType[];
-};
+export type SessionType = Row<'sessions'>
+export type SessionInsertDto = InsertDto<'sessions'>
+export type SessionUpdateDto = UpdateDto<'sessions'>
 
-export type InputTicketType = Omit<TicketType, 'id' | 'createdAt' | 'updatedAt' | 'votes'>;
+export type TicketType = Row<'tickets'>
+export type TicketInsertDto = InsertDto<'tickets'>
+export type TicketUpdateDto = UpdateDto<'tickets'>
 
-export type User = {
-  id: string;
-  name: string;
-  email?: string;
-};
+export type UserType = User
 
-export type InputUserType = Omit<User, 'id' | 'createdAt' | 'updatedAt'>;
+export type VoteType = Row<'votes'>
+export type VoteInsertDto = InsertDto<'votes'>
+export type VoteUpdateDto = UpdateDto<'votes'>
 
-export type VoteType = {
-  id: string;
-  createdAt: Date;
-  updatedAt: Date;
-  user: User;
-  value: number;
-};
+export type ProfileType = Row<'profiles'>
+export type ProfileInsertDto = InsertDto<'profiles'>
+export type ProfileUpdateDto = UpdateDto<'profiles'>
 
-export type InputVoteType = Omit<VoteType, 'id' | 'createdAt' | 'updatedAt'>;
+export type AccountDeletionRequestType = Row<'user_deletion_requests'>
+export type AccountDeletionRequestInsertDto = InsertDto<'user_deletion_requests'>
+export type AccountDeletionRequestUpdateDto = UpdateDto<'user_deletion_requests'>
+
+

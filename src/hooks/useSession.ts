@@ -1,35 +1,38 @@
-import { doc, onSnapshot } from 'firebase/firestore';
-import { useEffect, useState } from 'react';
+
+import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
-import { db } from '../../firebase';
-import { SessionType } from '../types';
+import { getSessionById, getSessionByIdDeep } from '../queries/getSession';
+import useSupabase from './useSupabase';
 
-function useSession() {
+const useSession = () => {
   const { sessionId: id } = useParams<{ sessionId: string }>()
-  const [session, setSession] = useState<SessionType | null>(null)
+  const client = useSupabase();
+  const queryKey = ['session', id, client];
 
-  if (!id) {
-    throw new Error('useSession requires a sessionId be passed in the url')
-  }
+  if (!id) throw new Error('No session ID provided');
 
-  useEffect(() => {
-    const unsubscribe = onSnapshot(doc(db, 'sessions', id), (doc) => {
-      if (doc.exists()) {
-        setSession({
-          ...doc.data(),
-          createdAt: doc.data().createdAt.toDate(),
-          updatedAt: doc.data().updatedAt.toDate(),
-          id: doc.id,
-        } as SessionType)
-      }
-    })
 
-    return () => {
-      unsubscribe()
-    }
-  }, [id])
+  const queryFnBare = async () => {
+    return (await getSessionById(client, id)).data
+  };
 
-  return { session }
-}
+  const queryFnDeep = async () => {
+    return getSessionByIdDeep(client, id)
+  };
+
+  const bare = useQuery({
+    queryKey,
+    queryFn: queryFnBare,
+    enabled: !!id,
+  });
+
+  const deep = useQuery({
+    queryKey,
+    queryFn: queryFnDeep,
+    enabled: !!id,
+  });
+
+  return { bare, deep };
+};
 
 export default useSession;

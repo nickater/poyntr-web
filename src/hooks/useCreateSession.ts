@@ -1,13 +1,15 @@
 import { useMutation } from '@tanstack/react-query';
 import { createSession } from '../services/session';
-import { InputSessionType } from '../types';
+import { SessionInsertDto } from '../types';
+import useSupabase from './useSupabase';
 
 export const useCreateSession = () => {
+  const supabase = useSupabase();
   const create = useMutation({
     mutationKey: ['sessions', 'create'],
 
-    mutationFn: async (session: InputSessionType) => {
-      await createSession(session);
+    mutationFn: async (session: SessionInsertDto) => {
+      await createSession(supabase, session);
     }
   })
 

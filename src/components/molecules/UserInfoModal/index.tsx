@@ -1,32 +1,32 @@
-import { FC, useRef } from 'react';
+import { FC } from 'react';
+import { useUser } from '../../../hooks/useUser';
 
 type UserInfoModalProps = {
-  onSubmit: (props: { username: string }) => void
+  onSubmitSuccess: () => void
+  onSubmitFailure?: () => void
 }
-const UserInfoModal: FC<UserInfoModalProps> = ({ onSubmit }) => {
-  const _username = useRef('')
+const UserInfoModal: FC<UserInfoModalProps> = ({ onSubmitSuccess, onSubmitFailure }) => {
+  const { loginWithGithub } = useUser()
 
-  const handleOnSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    onSubmit({ username: _username.current })
+  const handleLoginWithGithub = async () => {
+    const { error, data } = await loginWithGithub()
+    if (error) {
+      onSubmitFailure && onSubmitFailure()
+      return
+    }
+    if (data) {
+      onSubmitSuccess()
+    }
   }
 
   return (
     <dialog id="user_info_modal" className="modal">
       <div className="modal-box">
         <h3 className="font-bold text-lg">Welcome!</h3>
-        <form onSubmit={handleOnSubmit}>
-          <input
-            onChange={(e) => _username.current = e.target.value}
-            placeholder='Please enter your name'
-            type="text"
-            className="border-2 border-gray-300 rounded-lg p-2 w-full mt-4"
-          />
-          <button
-            type='submit'
-            className="btn btn-primary mt-4 w-full"
-          >Submit</button>
-        </form>
+        <button
+          type='button'
+          className="btn btn-secondary mt-4 w-full"
+          onClick={handleLoginWithGithub}>Login with Github</button>
       </div>
       <form method="dialog" className="modal-backdrop">
         <button>close</button>

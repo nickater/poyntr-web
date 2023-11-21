@@ -1,41 +1,49 @@
-import 'firebase/firestore';
-import { collection, deleteDoc, doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '../../firebase';
-import { InputSessionType, SessionType } from '../types';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { Err, Ok, Result } from 'ts-results';
+import { SessionInsertDto, SessionType } from '../types';
 
-const ref = collection(db, 'sessions')
+export const getSessionById = async (client: SupabaseClient, id: string) => {
+  const result = await client.from('sessions').select('*, tickets(*, votes(*))').eq('id', id).single()
+  const owner = (await client.auth.getUser(result.data?.owner_id || '')).data
 
-export const getSessionById = async (id: string): Promise<SessionType> => {
-  const result = doc(ref, id);
-  const docSnap = await getDoc(result);
-
-  if (docSnap.exists()) {
-    // map the created at and updated at to a date object
-
-    return {
-      ...docSnap.data(),
-      createdAt: docSnap.data().createdAt.toDate(),
-      updatedAt: docSnap.data().updatedAt.toDate(),
-      id: docSnap.id,
-    } as SessionType;
+  if (result.error) {
+    throw new Error(result.error.message)
   }
+  return {
+    ...result.data,
+    owner,
+  }
+}
 
-  throw new Error('Session not found');
+export const createSession = async (client: SupabaseClient, session: SessionInsertDto): Promise<Result<string, Error>> => {
+  try {
+    const result = await client.from('sessions').insert(session).select('id').single();
+    if (result.error) {
+      throw result.error;
+    }
+
+    if (result.data) {
+      return Ok(result.data.id);
+    }
+
+    throw new Error('Could not create session');
+  } catch (error) {
+    return Err(new Error('Could not create session'));
+  }
 };
 
-export const createSession = async (session: InputSessionType): Promise<void> => {
-  await setDoc(doc(ref), session);
+export const updateSession = async (client: SupabaseClient, id: string, session: Omit<SessionType, 'id'>): Promise<void> => {
+  const result = await client.from('sessions').update(session).eq('id', id).single();
+  if (result.error) {
+    throw result.error;
+  }
 };
 
-export const updateSession = async (id: string, session: Omit<SessionType, 'id'>): Promise<void> => {
-  const result = await setDoc(doc(ref, id), session);
-
-  return result;
+export const deleteSession = async (client: SupabaseClient, id: string): Promise<void> => {
+  const result = await client.from('sessions').delete().eq('id', id);
+  if (result.error) {
+    throw result.error;
+  }
 };
 
-export const deleteSession = async (id: string): Promise<void> => {
-  const docRef = doc(ref, id)
-  const result = await deleteDoc(docRef)
-
-  return result;
-};
+export type FullSessionType = Awaited<ReturnType<typeof getSessionById>>;

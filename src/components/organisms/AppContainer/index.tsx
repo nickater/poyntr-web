@@ -6,36 +6,38 @@ import { UserInfoModal } from '../../molecules/UserInfoModal'
 import { closeUserInfoModal, openUserInfoModal } from '../../molecules/UserInfoModal/utils'
 
 function AppContainer() {
-  const { user, clearUser, setUsername, checkUsername } = useUser()
+  const { user, logout, isLoading } = useUser()
   const navigate = useNavigate()
+  const username = user?.user_metadata.user_name
 
   const login = () => {
     openUserInfoModal()
   }
 
-  const logout = () => {
-    clearUser()
+  const logoutUser = () => {
+    logout()
     toast.success('Logged out!')
     navigate('/')
   }
 
-  const onModalSubmit = (props: { username: string }) => {
-    if (props.username) {
-      setUsername(props.username)
-      toast.success(`Welcome ${props.username}!`)
+  const onModalSubmitSuccess = () => {
+    if (user) {
+      toast.success(`Welcome ${username}`)
     }
     closeUserInfoModal()
   }
 
+  const onModalSubmitFailure = () => {
+    toast.error('Something went wrong!')
+  }
+
   useEffect(() => {
-    const userAlreadyExists = checkUsername()
+    if (isLoading) return
 
-    if (!userAlreadyExists) {
+    if (!user) {
       openUserInfoModal()
-      return
     }
-
-  }, [checkUsername, user])
+  }, [isLoading, user])
 
   return (
     <div className='w-full'>
@@ -45,9 +47,9 @@ function AppContainer() {
           <Link to={'/'} className="btn btn-ghost normal-case text-2xl">poyntr</Link>
         </div>
         <div>
-          <button onClick={user.username ? logout : login} className="btn btn-ghost normal-case text-lg">
+          <button onClick={user ? logoutUser : login} className="btn btn-ghost normal-case text-lg">
             {
-              user.username ? `${user.username}` : 'Login'
+              username ? `${username}` : 'Login'
             }
           </button>
         </div>
@@ -55,7 +57,7 @@ function AppContainer() {
       <div className='px-2 pt-6 md:px-10 md:pt-12'>
         <Outlet />
       </div>
-      <UserInfoModal onSubmit={onModalSubmit} />
+      <UserInfoModal onSubmitSuccess={onModalSubmitSuccess} onSubmitFailure={onModalSubmitFailure} />
     </div>
   )
 }

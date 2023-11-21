@@ -1,37 +1,41 @@
 
-import { SubmitErrorHandler, SubmitHandler, useForm } from 'react-hook-form';
+import { FieldErrors, SubmitErrorHandler, SubmitHandler, useForm } from 'react-hook-form';
+import { SessionInsertDto } from '../../../types';
 
-export type CreateSessionFormData = {
-  name?: string;
-  description?: string;
-};
+export type CreateSessionFormData = Omit<SessionInsertDto, 'owner_id'>;
 
 type CreateSessionFormProps = {
-  onSubmit: (data: CreateSessionFormData) => void;
+  onValidSubmit: (data: CreateSessionFormData) => void;
+  onInvalidSubmit?: (errors: FieldErrors<CreateSessionFormData>) => void;
 };
 
-export const CreateSessionForm: React.FC<CreateSessionFormProps> = ({ onSubmit }) => {
-  const { register, handleSubmit } = useForm<CreateSessionFormData>();
+export const CreateSessionForm: React.FC<CreateSessionFormProps> = ({ onValidSubmit, onInvalidSubmit }) => {
+  const { register, handleSubmit } = useForm<CreateSessionFormData>({
+    defaultValues: {
+      name: '',
+      description: '',
+    },
+  });
 
   const handleValidFormSubmit: SubmitHandler<CreateSessionFormData> = (data: CreateSessionFormData, e) => {
     e?.preventDefault();
-    console.log('+++++', data);
-    onSubmit(data);
+    onValidSubmit(data);
   };
 
   const handleInvalidFormSubmit: SubmitErrorHandler<CreateSessionFormData> = (errors, e) => {
     e?.preventDefault();
-    console.warn(errors);
+    onInvalidSubmit?.(errors);
   }
 
   return (
     <form onSubmit={handleSubmit(handleValidFormSubmit, handleInvalidFormSubmit)}>
       <div className='mb-4'>
         <input
+          data-1p-ignore
           className='input input-primary w-full'
-          placeholder='Session Name (optional)'
+          placeholder='Session Name'
           type="text"
-          {...register('name')} />
+          {...register('name', { required: true })} />
       </div>
       <div className='mb-4'>
         <textarea

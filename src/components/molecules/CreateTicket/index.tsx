@@ -1,22 +1,34 @@
 import { FC } from 'react';
-import { SubmitErrorHandler, SubmitHandler, useForm } from 'react-hook-form';
-import { InputTicketType } from '../../../types';
+import { FieldErrors, SubmitErrorHandler, SubmitHandler, useForm } from 'react-hook-form';
+import { TicketInsertDto } from '../../../types';
 import Card from '../Card';
 
 type CreateTicketProps = {
-  onCreateTicketSubmit: (props: InputTicketType) => void;
+  onValidSubmit: (props: TicketInsertDto) => void;
+  onInvalidSubmit?: (error: FieldErrors<TicketInsertDto>) => void;
+
 }
 const CreateTicket: FC<CreateTicketProps> = (props) => {
-  const { register, handleSubmit, formState: { errors } } = useForm<InputTicketType>({ mode: 'onBlur' });
+  const { register, handleSubmit, reset, setFocus } = useForm<TicketInsertDto>({ mode: 'onBlur' });
 
-  const handleOnValid: SubmitHandler<InputTicketType> = (ticket: InputTicketType, event) => {
+  const handleOnValid: SubmitHandler<TicketInsertDto> = (ticket: TicketInsertDto, event) => {
     event?.preventDefault()
-    props.onCreateTicketSubmit(ticket)
+    props.onValidSubmit(ticket)
+
+    reset()
   }
 
-  const handleOnInvalid: SubmitErrorHandler<InputTicketType> = (errors, event) => {
+  const handleOnInvalid: SubmitErrorHandler<TicketInsertDto> = (errors, event) => {
     event?.preventDefault()
-    console.warn(errors)
+    props.onInvalidSubmit?.(errors)
+
+    if (errors.url?.type === 'required') {
+      setFocus('url')
+    }
+
+    if (errors.url?.type === 'pattern') {
+      setFocus('url')
+    }
   }
 
   return (
@@ -25,17 +37,10 @@ const CreateTicket: FC<CreateTicketProps> = (props) => {
       <form onSubmit={handleSubmit(handleOnValid, handleOnInvalid)}>
         <div className="pt-2">
           <input
-            type="url"
             {...register('url', { required: true, pattern: /https:\/\/.*\.com/ })}
             placeholder="https://www.jira..."
             className="input input-bordered input-primary w-full"
           />
-          {
-            errors.url?.type === 'required' && <div className="text-red-500 pt-2">Ticket URL is required</div>
-          }
-          {
-            errors.url?.type === 'pattern' && <div className="text-red-500 pt-2">Ticket URL must be a valid URL</div>
-          }
         </div>
         <div className="pt-4">
           <textarea
@@ -44,7 +49,7 @@ const CreateTicket: FC<CreateTicketProps> = (props) => {
             placeholder="Description" />
         </div>
         <div className="card-actions justify-center w-full pt-4">
-          <input type="submit" className="btn btn-primary w-full" value="Create!" />
+          <input type="submit" className="btn btn-primary w-full" value="Add ticket" />
         </div>
       </form>
     </Card>

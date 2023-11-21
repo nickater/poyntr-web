@@ -1,32 +1,29 @@
-import { FC, useRef } from 'react';
+import { FC } from 'react';
 import { SubmitErrorHandler, SubmitHandler, useForm } from 'react-hook-form';
-import { FIBONACCI } from '../../../constants';
-import { TicketType } from '../../../types';
+import { TicketType, VoteType } from '../../../types';
 import Select from '../../atoms/Select';
 import Card from '../Card';
 
-type TicketProps = TicketType & {
+type TicketProps = Partial<TicketType> & {
   votable: boolean;
-  voted?: boolean;
-  onVote?: (value: string, ticketId: string) => void;
+  // voted?: boolean;
+  onVote?: (value: VoteType['value'], ticketId: TicketType['id']) => void;
   voteOptions?: string[];
-  totalVotes?: number;
-  possibleVotes?: number;
+  // totalVotes?: number;
+  // possibleVotes?: number;
 }
 
 type TicketForm = {
-  value: string;
+  value: VoteType['value'];
 }
 
 const Ticket: FC<TicketProps> = (props) => {
-  const userVote = useRef<string | undefined>(undefined);
   const { register, handleSubmit } = useForm<TicketForm>();
-  const onVote = (value: string) => {
-    userVote.current = value;
-  }
 
   const handleValidFormSubmit: SubmitHandler<TicketForm> = (data) => {
-    onVote(data.value);
+    if (!props.id) return;
+
+    props.onVote?.(data.value, props.id);
   }
 
   const handleInvalidFormSubmit: SubmitErrorHandler<TicketForm> = () => {
@@ -34,7 +31,7 @@ const Ticket: FC<TicketProps> = (props) => {
   }
 
   return (
-    <Card title={props.name}>
+    <Card title={props.name || ''}>
       <div>
         {props.description}
       </div>
@@ -47,7 +44,7 @@ const Ticket: FC<TicketProps> = (props) => {
                 <Select
                   formRegister={register('value', { required: true })}
                   placeholder="Options"
-                  options={props.voteOptions || FIBONACCI} />
+                  options={props.voteOptions?.map((opt) => ({ label: opt, value: opt })) || []} />
               </div>
               <div>
                 <button type='submit' className="btn btn-primary w-full mt-4">Vote</button>

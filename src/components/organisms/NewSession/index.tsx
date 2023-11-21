@@ -1,5 +1,6 @@
 import { FC } from 'react'
 import { SubmitErrorHandler, SubmitHandler, useForm } from 'react-hook-form'
+import toast from 'react-hot-toast'
 import { VOTING_OPTIONS } from '../../../constants'
 import Select from '../../atoms/Select'
 import Card from '../../molecules/Card'
@@ -15,15 +16,19 @@ const Component: FC<CreateSessionProps> = ({ onSubmit }) => {
 
 
   const handleValidSubmit: SubmitHandler<OnSubmitProps> = (props, event) => {
-
     event?.preventDefault()
     onSubmit(props)
   }
 
   const handleInvalidSubmit: SubmitErrorHandler<OnSubmitProps> = (props, event) => {
     event?.preventDefault()
-    console.error('Invalid submit', props)
+    toast.error('Please select a vote style')
   }
+
+  const formattedOptions = Object.entries(VOTING_OPTIONS).map(([key, value]) => ({
+    label: `${value.label} (${value.example})`,
+    value: key
+  }))
 
   return (
     <Card title="New Session">
@@ -32,7 +37,7 @@ const Component: FC<CreateSessionProps> = ({ onSubmit }) => {
           <Select
             formRegister={register('voteStyle', { required: true })}
             placeholder='Vote Style'
-            options={Object.values(VOTING_OPTIONS)}
+            options={formattedOptions}
           />
         </div>
         <div className="card-actions justify-end w-full pt-4">
