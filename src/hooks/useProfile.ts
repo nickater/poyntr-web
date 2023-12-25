@@ -2,7 +2,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { getProfileById } from '../queries/getProfile';
 import { ProfileType } from '../types';
-import useSupabase from './useSupabase';
+import { useSupabase } from './useSupabase';
 
 const useProfile = (userId: string) => {
   const client = useSupabase();

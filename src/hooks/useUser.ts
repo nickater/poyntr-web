@@ -2,27 +2,27 @@ import { useEffect, useState } from 'react'
 
 import { Session } from '@supabase/supabase-js'
 import { UserType } from '../types'
-import useSupabase from './useSupabase'
+import { useSupabase } from './useSupabase'
 
 export const useUser = () => {
-  const supabase = useSupabase()
+  const client = useSupabase()
   const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [user, setUser] = useState<null | UserType>(null)
 
   useEffect(() => {
     setIsLoading(true)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = client.auth.onAuthStateChange((_event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
       setIsLoading(false)
     })
     return () => subscription.unsubscribe()
-  }, [supabase.auth])
+  }, [client.auth])
 
   const loginWithGithub = async () => {
     setIsLoading(true)
-    const result = await supabase.auth.signInWithOAuth({ provider: 'github', options: { redirectTo: 'http://localhost:5173' } })
+    const result = await client.auth.signInWithOAuth({ provider: 'github', options: { redirectTo: 'http://localhost:5173' } })
 
     if (result.error) {
       console.log(result.error)
@@ -32,7 +32,7 @@ export const useUser = () => {
   }
 
   const logout = async () => {
-    const result = await supabase.auth.signOut()
+    const result = await client.auth.signOut()
 
     if (result.error) {
       console.log(result.error)

@@ -1,25 +1,29 @@
 import { useRef, useState } from 'react'
 import { FieldErrors } from 'react-hook-form'
 import toast from 'react-hot-toast'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import Card from '../../components/molecules/Card'
 import { CreateSessionForm, CreateSessionFormData } from '../../components/molecules/CreateSessionForm'
 import { CreateTicket } from '../../components/molecules/CreateTicket'
 import { Ticket } from '../../components/molecules/Ticket'
 import { VOTING_OPTIONS, VotingOptions } from '../../constants'
+import { useCreateTickets } from '../../hooks/ticket/useCreateTickets'
+import { useSupabase } from '../../hooks/useSupabase'
 import { useUser } from '../../hooks/useUser'
 import { createSession } from '../../services/session'
-import { createTickets } from '../../services/ticket'
 import { SessionInsertDto, TicketInsertDto } from '../../types'
 import { wait } from '../../utils/wait'
 import { mapSessionFormToInputSessionType } from './utils'
 
 const CreateSessionPage = () => {
+  const client = useSupabase()
   const { state } = useLocation()
   const { user } = useUser()
   const [tickets, setTickets] = useState<TicketInsertDto[]>([])
   const sessionRef = useRef<SessionInsertDto | null>(null)
   const [viewSection, setViewSection] = useState<'ticket' | 'session'>('session')
+  const { mutateAsync: createTicketsAsync } = useCreateTickets()
+  const navigate = useNavigate()
 
   const onCreateSessionSubmitSuccessful = async (props: CreateSessionFormData) => {
     if (!user) {
@@ -32,7 +36,6 @@ const CreateSessionPage = () => {
       description: props.description!,
       owner_id: user.id,
     })
-    console.log(mappedSession)
     sessionRef.current = mappedSession
 
     toast.success('Session details saved')
@@ -71,13 +74,15 @@ const CreateSessionPage = () => {
   }
 
   const handleFinalize = async () => {
+    console.log('handleFinalize');
+
     if (!sessionRef.current) {
       toast.error('Session not found')
       return
     }
 
     const session = sessionRef.current
-    const createdSession = await createSession(session)
+    const createdSession = await createSession(client, session)
 
     if (createdSession.err) {
       toast.error('Error creating session')
@@ -92,9 +97,11 @@ const CreateSessionPage = () => {
       ticketsToAdd.push(ticket)
     }
 
-    await createTickets(ticketsToAdd)
+    await createTicketsAsync(ticketsToAdd)
 
     toast.success('Session created')
+
+    navigate(`/session/${sessionId}`)
   }
 
   const removeTicket = (ticketIndex: number) => {
@@ -107,52 +114,59 @@ const CreateSessionPage = () => {
 
   const formattedVoteStyle = VOTING_OPTIONS[state.voteStyle as keyof VotingOptions].label
 
-
   return (
-    <div>
-      {
-        tickets.length > 0 && (
-          <div className='p-4'>
-            <button className='btn btn-outline mb-4 w-full' onClick={handleFinalize}>Finalize</button>
-          </div>
-        )
-      }
-      <div className="collapse bg-base-200 mb-4">
-        <input type="radio" name="my-accordion-1" checked={viewSection === 'session'} onChange={() => setViewSection('session')} />
-        <div className="collapse-title text-xl font-medium">
-          Session Details
-        </div>
-        <div className="collapse-content">
-          <Card>
-            <p className='pb-4'>Pointing Style: {formattedVoteStyle}</p>
-            <CreateSessionForm onValidSubmit={onCreateSessionSubmitSuccessful} onInvalidSubmit={onCreateSessionSubmitFailed} />
-          </Card>
-        </div>
-      </div>
-      <div className="collapse bg-base-200">
-        <input type="radio" name="my-accordion-1" checked={viewSection === 'ticket'} onChange={() => setViewSection('ticket')} />
-        <div className="collapse-title text-xl font-medium">
-          Add Tickets
-        </div>
-        <div className='collapse-content'>
-          <CreateTicket onValidSubmit={onCreateTicketSubmitSuccess} onInvalidSubmit={onCreateTicketSubmitFailed} />
-        </div>
-      </div>
-      {
-        tickets.map((ticket, index) => (
-          <div className='flex flex-row mx-4 mt-4 outline outline-1  rounded-md'>
-            <div className='flex-grow'>
-              <Ticket
-                key={ticket.id}
-                votable={false}
-                description={null}
-                name={ticket.name || null}
-                url={ticket.url} />
+    <div className="card card-compact bg-neutral text-neutral-content shadow-xl md:card-normal">
+      <div className="card-body">
+        <h2 className="card-title">Create a new session</h2>
+        {
+          tickets.length > 0 && (
+            <div className='p-4'>
+              <button className='btn btn-outline mb-4 w-full' onClick={handleFinalize}>Finalize</button>
             </div>
-            <button className='btn btn-ghost' onClick={removeTicket(index)}>Delete</button>
+          )
+        }
+        <div className="collapse bg-base-100 mb-4">
+          <input type="radio" name="my-accordion-1" checked={viewSection === 'session'} onChange={() => setViewSection('session')} />
+          <div className="collapse-title text-xl font-medium">
+            Session Details
           </div>
-        ))
-      }
+          <div className="collapse-content">
+            <Card>
+              <p className='pb-4'>Pointing Style: {formattedVoteStyle}</p>
+              <CreateSessionForm onValidSubmit={onCreateSessionSubmitSuccessful} onInvalidSubmit={onCreateSessionSubmitFailed} />
+            </Card>
+          </div>
+        </div>
+        <div className="collapse bg-base-100">
+          <input type="radio" name="my-accordion-1" checked={viewSection === 'ticket'} onChange={() => setViewSection('ticket')} />
+          <div className="collapse-title text-xl font-medium">
+            Add Tickets
+          </div>
+          <div className='collapse-content'>
+            <CreateTicket onValidSubmit={onCreateTicketSubmitSuccess} onInvalidSubmit={onCreateTicketSubmitFailed} />
+          </div>
+        </div>
+        {
+          tickets.map((ticket, index) => (
+            <div className='flex flex-row mx-4 mt-4 outline outline-1  rounded-md'>
+              <div className='flex-grow'>
+                <Ticket
+                  votable={false}
+                  description={null}
+                  name={ticket.name || null}
+                  url={ticket.url}
+                  created_at={''}
+                  id={''}
+                  session_id={sessionRef.current?.id || ''}
+                  status={''}
+                  updated_at={''}
+                  votes={[]} />
+              </div>
+              <button className='btn btn-ghost' onClick={removeTicket(index)}>Delete</button>
+            </div>
+          ))
+        }
+      </div>
     </div>
   )
 }

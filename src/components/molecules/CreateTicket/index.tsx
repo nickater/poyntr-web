@@ -29,6 +29,19 @@ const CreateTicket: FC<CreateTicketProps> = (props) => {
     if (errors.url?.type === 'pattern') {
       setFocus('url')
     }
+
+    if (errors.name?.type === 'required') {
+      setFocus('name')
+    }
+
+    if (errors.name?.type === 'minLength') {
+      setFocus('name')
+    }
+
+    if (errors.description?.type === 'required') {
+      setFocus('description')
+    }
+
   }
 
   return (
@@ -38,7 +51,14 @@ const CreateTicket: FC<CreateTicketProps> = (props) => {
         <div className="pt-2">
           <input
             {...register('url', { required: true, pattern: /https:\/\/.*\.com/ })}
-            placeholder="https://www.jira..."
+            placeholder="Ticket URL"
+            className="input input-bordered input-primary w-full"
+          />
+        </div>
+        <div className="pt-4">
+          <input
+            {...register('name', { required: true, minLength: 4 })}
+            placeholder="Ticket Name"
             className="input input-bordered input-primary w-full"
           />
         </div>
@@ -46,7 +66,7 @@ const CreateTicket: FC<CreateTicketProps> = (props) => {
           <textarea
             {...register('description')}
             className="textarea textarea-primary w-full"
-            placeholder="Description" />
+            placeholder="Ticket Description (optional)" />
         </div>
         <div className="card-actions justify-center w-full pt-4">
           <input type="submit" className="btn btn-primary w-full" value="Add ticket" />

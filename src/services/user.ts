@@ -1,5 +1,5 @@
-import { supabase } from '../supabase'
 import { UserType } from '../types'
+import { Client } from '../types/general'
 
 export enum UserErrorType {
   NotFound = 'Not Found',
@@ -12,8 +12,8 @@ class UserError extends Error {
   }
 }
 
-async function getUser(): Promise<UserType> {
-  const { data, error } = await supabase.auth.getUser()
+async function getUser(client: Client): Promise<UserType> {
+  const { data, error } = await client.auth.getUser()
 
   if (error) {
     throw error
@@ -26,8 +26,8 @@ async function getUser(): Promise<UserType> {
   return data.user
 }
 
-async function updateUser(user: Partial<UserType>): Promise<UserType> {
-  const { data, error } = await supabase.auth.updateUser(user)
+async function updateUser(client: Client, user: Partial<UserType>): Promise<UserType> {
+  const { data, error } = await client.auth.updateUser(user)
 
   if (error) {
     throw error
@@ -40,8 +40,8 @@ async function updateUser(user: Partial<UserType>): Promise<UserType> {
   return data.user
 }
 
-async function deleteUser(id: string): Promise<void> {
-  const { error } = await supabase.from('user_deletion_requests').insert({ user_id: id })
+async function deleteUser(client: Client, id: string): Promise<void> {
+  const { error } = await client.from('user_deletion_requests').insert({ user_id: id })
 
   if (error) {
     throw error

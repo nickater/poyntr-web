@@ -1,60 +1,48 @@
-import { FC } from 'react';
-import { SubmitErrorHandler, SubmitHandler, useForm } from 'react-hook-form';
+import { FC, memo } from 'react';
+import { useTicketRealtime } from '../../../hooks/ticket/useTicketRealtime';
 import { TicketType, VoteType } from '../../../types';
-import Select from '../../atoms/Select';
 import Card from '../Card';
+import { ViewVotes } from '../ViewVotes';
 
-type TicketProps = Partial<TicketType> & {
+export type BaseTicketProps = {
+  id: TicketType['id'];
   votable: boolean;
-  // voted?: boolean;
-  onVote?: (value: VoteType['value'], ticketId: TicketType['id']) => void;
+  onVote?: (ticketId: TicketType['id'], value: VoteType['value']) => void;
   voteOptions?: string[];
+  showChart?: boolean;
   // totalVotes?: number;
   // possibleVotes?: number;
 }
 
-type TicketForm = {
-  value: VoteType['value'];
-}
+const Ticket: FC<BaseTicketProps> = memo((props) => {
 
-const Ticket: FC<TicketProps> = (props) => {
-  const { register, handleSubmit } = useForm<TicketForm>();
+  const [ticketData, votesData] = useTicketRealtime({ ticketId: props.id });
+  const { data: ticket } = ticketData;
+  const { data: votes, error: votesError } = votesData;
 
-  const handleValidFormSubmit: SubmitHandler<TicketForm> = (data) => {
-    if (!props.id) return;
-
-    props.onVote?.(data.value, props.id);
-  }
-
-  const handleInvalidFormSubmit: SubmitErrorHandler<TicketForm> = () => {
-    console.log('invalid form');
-  }
+  if (!ticket) return null;
+  if (votesError) return null;
+  if (!votes) return null;
 
   return (
-    <Card title={props.name || ''}>
-      <div>
-        {props.description}
+    <Card title={ticket.name || ''}>
+      <div className='flex flex-row justify-between'>
+        <div>
+          <div>
+            <p>{ticket.description}</p>
+          </div>
+          <a target='_blank' href={ticket.url}>Ticket Link</a>
+          {
+            votes?.length > 0 && (
+              <ViewVotes ticketId={ticket.id} />
+            )
+          }
+        </div>
+
       </div>
-      <a target='_blank' href={props.url}>Ticket Link</a>
-      <form onSubmit={handleSubmit(handleValidFormSubmit, handleInvalidFormSubmit)}>
-        {
-          (props.votable) && (
-            <div>
-              <div className="pt-4">
-                <Select
-                  formRegister={register('value', { required: true })}
-                  placeholder="Options"
-                  options={props.voteOptions?.map((opt) => ({ label: opt, value: opt })) || []} />
-              </div>
-              <div>
-                <button type='submit' className="btn btn-primary w-full mt-4">Vote</button>
-              </div>
-            </div>
-          )
-        }
-      </form>
+
     </Card>
   );
-}
+});
 
 export { Ticket };

@@ -4,12 +4,14 @@ import { useNavigate } from 'react-router-dom'
 import * as JoinSession from '../../components/organisms/JoinSession'
 import * as NewSession from '../../components/organisms/NewSession'
 import { StartTemplate } from '../../components/templates/StartTemplate'
+import { useSupabase } from '../../hooks/useSupabase'
 import { useUser } from '../../hooks/useUser'
 import { getSessionById } from '../../services/session'
 
 const StartPage = () => {
   const navigate = useNavigate()
   const { user, isLoading } = useUser()
+  const client = useSupabase()
 
   const onNewSessionSubmit = (props: NewSession.OnSubmitProps) => {
     if (!user) {
@@ -26,7 +28,7 @@ const StartPage = () => {
       return
     }
 
-    const session = await getSessionById(props.sessionId)
+    const session = await getSessionById(client, props.sessionId)
 
     if (!session) {
       toast.error('Session not found')

@@ -6,6 +6,7 @@ import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import { AppContainer } from './components/organisms/AppContainer'
 import './index.css'
 import { CreateSessionPage } from './pages/CreateSessionPage'
+import { ManageSessionsPage } from './pages/ManageSessionsPage'
 import { SessionPage } from './pages/SessionPage'
 import { StartPage } from './pages/StartPage'
 import { store } from './store'
@@ -24,9 +25,13 @@ const router = createBrowserRouter([
         element: <CreateSessionPage />
       },
       {
+        path: '/session/manage',
+        element: <ManageSessionsPage />
+      },
+      {
         path: '/session/:sessionId',
         element: <SessionPage />
-      }
+      },
     ]
   }
 ])
