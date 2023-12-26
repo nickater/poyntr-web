@@ -49,12 +49,6 @@ const ManageSession: FC<ManageSessionProps> = ({ sessionId }) => {
               ))
             }
           </div>
-          {/* <div className="card-actions justify-center w-full pt-4">
-          <button onClick={() => refetch()} className="btn btn-primary w-full">Refetch!</button>
-        </div> */}
-        </div>
-        <div className='collapse'>
-          <div className='collapse-title'>Advanced</div>
         </div>
       </div>
     </div>

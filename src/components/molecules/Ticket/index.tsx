@@ -2,6 +2,8 @@ import { FC, memo } from 'react';
 import { useTicketRealtime } from '../../../hooks/ticket/useTicketRealtime';
 import { TicketType, VoteType } from '../../../types';
 import Card from '../Card';
+import { Error } from '../Error';
+import { Loading } from '../Loading';
 import { ViewVotes } from '../ViewVotes';
 
 export type BaseTicketProps = {
@@ -17,12 +19,20 @@ export type BaseTicketProps = {
 const Ticket: FC<BaseTicketProps> = memo((props) => {
 
   const [ticketData, votesData] = useTicketRealtime({ ticketId: props.id });
-  const { data: ticket } = ticketData;
-  const { data: votes, error: votesError } = votesData;
+  const { data: ticket, isLoading: isTicketIsLoading, isError: isTicketError } = ticketData;
+  const { data: votes, isError: isVoteError, isLoading: isVoteLoading } = votesData;
 
-  if (!ticket) return null;
-  if (votesError) return null;
-  if (!votes) return null;
+  if (isTicketIsLoading || isVoteLoading) {
+    return (
+      <Loading />
+    );
+  }
+
+  if (isTicketError || isVoteError || !ticket || !votes) {
+    return (
+      <Error />
+    );
+  }
 
   return (
     <Card title={ticket.name || ''}>

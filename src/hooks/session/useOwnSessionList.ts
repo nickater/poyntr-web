@@ -4,18 +4,18 @@ import { getAllSessionsByOwnerId } from '../../queries/getSession';
 import { useSupabase } from '../useSupabase';
 
 type UseOwnSessionsListProps = {
-  ownerId: string;
+  ownerId?: string;
 }
 const useOwnSessionsList = ({ ownerId }: UseOwnSessionsListProps) => {
   const client = useSupabase();
-  // const { user } = useUser();
-  // const ownerId = '4051b395-4b59-40d1-952a-a4c90ddf4b4f';
 
   return useQuery({
+    enabled: !!ownerId,
     queryKey: ['session', ownerId],
     queryFn: async ({ queryKey }) => {
       try {
-        return await getAllSessionsByOwnerId(client, queryKey[1].toString());
+        //TODO: don't force queryKey[1] to be a string
+        return await getAllSessionsByOwnerId(client, queryKey[1]!.toString());
       } catch (error) {
         console.error('++++++', error);
       }

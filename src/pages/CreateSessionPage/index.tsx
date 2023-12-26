@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import Card from '../../components/molecules/Card'
 import { CreateSessionForm, CreateSessionFormData } from '../../components/molecules/CreateSessionForm'
 import { CreateTicket } from '../../components/molecules/CreateTicket'
-import { Ticket } from '../../components/molecules/Ticket'
+import NewTicket from '../../components/molecules/Ticket/CreateTicket'
 import { VOTING_OPTIONS, VotingOptions } from '../../constants'
 import { useCreateTickets } from '../../hooks/ticket/useCreateTickets'
 import { useSupabase } from '../../hooks/useSupabase'
@@ -106,9 +106,19 @@ const CreateSessionPage = () => {
 
   const removeTicket = (ticketIndex: number) => {
     return () => {
+      const shouldProceed = confirm('Are you sure you want to delete this ticket?')
+      if (!shouldProceed) {
+        return
+      }
       const newTickets = [...tickets]
       newTickets.splice(ticketIndex, 1)
       setTickets(newTickets)
+    }
+  }
+
+  const updateTicket = (ticketId: number) => {
+    return () => {
+      navigate(`/ticket/${ticketId}/update`)
     }
   }
 
@@ -117,7 +127,7 @@ const CreateSessionPage = () => {
   return (
     <div className="card card-compact bg-neutral text-neutral-content shadow-xl md:card-normal">
       <div className="card-body">
-        <h2 className="card-title">Create a new session</h2>
+        <h2 className="card-title">Create session</h2>
         {
           tickets.length > 0 && (
             <div className='p-4'>
@@ -146,26 +156,19 @@ const CreateSessionPage = () => {
             <CreateTicket onValidSubmit={onCreateTicketSubmitSuccess} onInvalidSubmit={onCreateTicketSubmitFailed} />
           </div>
         </div>
-        {
-          tickets.map((ticket, index) => (
-            <div className='flex flex-row mx-4 mt-4 outline outline-1  rounded-md'>
-              <div className='flex-grow'>
-                <Ticket
-                  votable={false}
-                  description={null}
-                  name={ticket.name || null}
-                  url={ticket.url}
-                  created_at={''}
-                  id={''}
-                  session_id={sessionRef.current?.id || ''}
-                  status={''}
-                  updated_at={''}
-                  votes={[]} />
+        <div className='collapse bg-base-100'>
+          {
+            tickets.map((ticket, index) => (
+              <div key={index} className='flex flex-row p-4'>
+                <NewTicket
+                  ticket={ticket}
+                  onUpdate={updateTicket(index)}
+                  onDelete={removeTicket(index)}
+                />
               </div>
-              <button className='btn btn-ghost' onClick={removeTicket(index)}>Delete</button>
-            </div>
-          ))
-        }
+            ))
+          }
+        </div>
       </div>
     </div>
   )

@@ -45,8 +45,7 @@ const CreateTicket: FC<CreateTicketProps> = (props) => {
   }
 
   return (
-    <Card>
-      <h2 className="card-title">Add details</h2>
+    <Card title='Add details'>
       <form onSubmit={handleSubmit(handleOnValid, handleOnInvalid)}>
         <div className="pt-2">
           <input
